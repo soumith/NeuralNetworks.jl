@@ -32,6 +32,17 @@ type SpatialMaxPool <: Layer
     # TODO: Define my fields here...
 end
 
-type SpatialConv <: Layer
-    # TODO: Define my fields here...
+type SpatialConv{T, I <: Integer} <: Layer
+    nInputPlane::I
+    nOutputPlane::I
+    kH::I
+    kW::I
+    dH::I
+    dW::I
+    weight::Array{T}
+    bias::Array{T}
+    grad_weight::Array{T}
+    grad_bias::Array{T}
+    output::Array{T}
+    gradInput::Array{T}
 end
