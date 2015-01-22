@@ -3,7 +3,7 @@ type ReLU{A<:AbstractArray} <: Pointwise{A}
     gradInput :: A
 end
 
-ReLU(T::Type, s...) = ReLU(Array(T, s), Array(T, s))
+ReLU(T::Type, s...) = ReLU(Array(T, s...), Array(T, s...))
 
 function updateOutput!{A}(self :: ReLU{A}, input :: A)
     self.output = input .* (input .>= zero(eltype(input)))
