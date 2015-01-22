@@ -1,5 +1,7 @@
-using NeuralNetworks
 using Base.Test
+import NeuralNetworks
+nn = NeuralNetworks
 
-# write your own tests here
+tm = nn.Module()
+
 @test 1 == 1
