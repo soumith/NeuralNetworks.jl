@@ -1,4 +1,4 @@
 module NeuralNetworks
 include("types.jl")
-#include("Container.jl")
+include("methods.jl")
 end
