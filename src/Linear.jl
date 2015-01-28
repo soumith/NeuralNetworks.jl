@@ -34,4 +34,3 @@ function accGradParameters!{A}(self :: Linear{A}, input :: A,
 end
 
 export Linear
-

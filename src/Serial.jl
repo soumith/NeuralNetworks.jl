@@ -5,34 +5,31 @@ type Serial{A<:AbstractArray, B<:AbstractArray} <: Container{A,B}
 end
 
 Serial(T::Type, input_size, output_size) =
-  Serial(Array(T, output_size), Array(T, input_size),
-  Array(Layer, 0))
+    Serial(Array(T, output_size),
+           Array(T, input_size),
+           Array(Layer, 0))
 
 function add_layer!{A, B}(self :: Serial{A, B}, layer :: Layer)
     if length(self.modules) == 0
-        @assert(typeof(self.gradInput) == A, "Layer type mismatch")
-        @assert(size(self.gradInput) == size(layer.gradInput),
-                "Layer size mismatch")
+        @assert(shape(self.gradInput) == shape(layer.gradInput),
+                "Layer shape mismatch")
     else
-        @assert(typeof(last(self.modules).output) == A, "Layer type mismatch")
-        @assert(size(last(self.modules).output) == size(layer.gradInput),
-                "Layer size mismatch")
+        @assert(shape(last(self.modules).output) == shape(layer.gradInput),
+                "Layer shape mismatch")
     end
     push!(self.modules, layer)
 end
 
 function validate{A, B}(self :: Serial{A, B})
-    input_type = A
-    input_size = size(self.gradInput)
+    local input_shape = shape(self.gradInput)
+
     for layer in self.modules
-        @assert(typeof(layer.gradInput) == input_type, "Layer type mismatch")
-        @assert(size(layer.gradInput) == input_size, "Layer size mismatch")
-        validate(layer)
-        input_type = typeof(layer.output)
-        input_size = size(layer.output)
+        @assert(shape(layer.gradInput) == input_shape,
+                "Layer shape mismatch")
+        input_shape = shape(layer.output)
     end
-    @assert(typeof(self.output) == input_type, "Layer type mismatch")
-    @assert(size(self.output) == input_size, "Layer size mismatch")
+
+    @assert(shape(self.output) == input_shape, "Layer shape mismatch")
 end
 
 function updateOutput!{A, B}(self :: Serial{A, B}, input :: A)
@@ -46,15 +43,13 @@ end
 function updateGradInput!{A, B}(self :: Serial{A, B},
                                 input :: A,
                                 gradOutput :: B)
-    self.gradInput = gradOutput
-    
-    for i = length(self.modules):-1:2
-        gradOutput = updateGradInput!(self.modules[i],
-                                      self.modules[i-1].output,
-                                      gradOutput)
-    end
+    if !isempty(self.modules)
+        for i = length(self.modules):-1:2
+            gradOutput = updateGradInput!(self.modules[i],
+                                          self.modules[i-1].output,
+                                          gradOutput)
+        end
 
-    if length(self.modules) > 0
         gradOutput = updateGradInput!(self.modules[1], input, gradOutput)
     end
 
@@ -66,6 +61,10 @@ function accGradParameters!{A, B}(self :: Serial{A, B},
                                   input :: A,
                                   gradOutput :: B,
                                   scale :: eltype(A))
+    if isempty(self.modules)
+        return
+    end
+
     for i = length(self.modules):-1:2
         layer = self.modules[i]
         accGradParameters!(layer,
@@ -75,9 +74,7 @@ function accGradParameters!{A, B}(self :: Serial{A, B},
         gradOutput = layer.gradInput
     end
 
-    if length(self.modules) > 0
-        accGradParameters!(self.modules[1], input, gradOutput, scale)
-    end
+    accGradParameters!(self.modules[1], input, gradOutput, scale)
 end
 
 export Serial

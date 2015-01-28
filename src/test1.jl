@@ -1,17 +1,20 @@
 using NeuralNetworks
 
-net = Serial(Float64, (10, 1), (3, 1))
-add_layer!(net, Linear(Float64, 1, 10, 3))
-add_layer!(net, ReLU(Float64, 3, 1))
+net = Serial(Float64, (10, 2, 1), (6, 1))
+add_layer!(net, View(Float64, (10, 2, 1), (20, 1)))
+add_layer!(net, Linear(Float64, 1, 20, 6))
+add_layer!(net, ReLU(Float64, 6, 1))
 validate(net)
 
 initWeights!(net)
 
-input = linspace(1.0, 10.0, 10)[:,:]
+input = reshape(linspace(1.0, 10.0, 20), (10, 2, 1))
 output = forward!(net, input)
 
-gradOutput = linspace(1.0, 10.0, 3)[:,:]
+println(output)
+
+gradOutput = reshape(linspace(1.0, 10.0, 6), (6, 1))
 gradInput = backward!(net, input, gradOutput)
 
-println(output)
+println(gradInput)
 

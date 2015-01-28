@@ -1,7 +1,18 @@
 module NeuralNetworks
 include("types.jl")
+include("Shape.jl")
 #include("SpatialConv.jl")
-include("ReLU.jl")
-include("Serial.jl")
+
+# weighted layers
 include("Linear.jl")
+
+# nonlinearities
+include("ReLU.jl")
+
+# containers
+include("Serial.jl")
+
+# miscellaneous
+include("View.jl")
+
 end

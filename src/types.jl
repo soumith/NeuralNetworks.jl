@@ -1,5 +1,6 @@
 abstract Layer{A<:AbstractArray, B<:AbstractArray}
 
+# Pointwise layers always use the same dimensionality for input and output
 abstract Pointwise{A<:AbstractArray} <: Layer{A, A}
 
 abstract Container{A<:AbstractArray, B<:AbstractArray} <: Layer{A, B}
@@ -33,6 +34,7 @@ function backward!{A, B}(self :: Layer{A, B}, input :: A, gradOutput :: B)
 end
 export backward!
 
+# Add a layer to the container
 function add_layer!{A, B}(self :: Container{A, B}, layer :: Layer)
     push!(self.modules, layer)
 end
@@ -67,11 +69,14 @@ function next(self :: Layer, state)
     return self, true
 end
 
+# state is (0, false) for initial setup (must return self next)
+#          (idx, state_for_modules[idx]) afterwards
 function start(self :: Container)
     return 0, false
 end
 
 function done(self :: Container, state)
+    local idx, o_state
     idx, o_state = state
     if idx == 0 then
         return false
@@ -80,10 +85,15 @@ function done(self :: Container, state)
         return true
     end
 
+    # Note that this check is simpler than in the general case, as we know
+    # each layer will return at least one element (self). So, as long
+    # as idx < length(self.modules), we know we're not done; this would no
+    # longer be true if we allowed empty layers.
     return done(self.modules[idx], o_state) && idx == length(self.modules)
 end
 
 function next(self :: Container, state)
+    local idx, o_state
     idx, o_state = state
     if idx == 0
         return self, (1, isempty(self.modules) ? true : start(self.modules[1]))
@@ -102,7 +112,7 @@ function zeroGradParameters!(self :: Layer)
     for layer in self
         for field in (:gradWeight, :gradBias)
             if field in names(layer)
-                a = getfield(layer, field)
+                local a = getfield(layer, field)
                 fill!(a, zero(eltype(a)))
             end
         end
