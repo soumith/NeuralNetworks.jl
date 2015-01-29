@@ -132,6 +132,20 @@ function initWeights!(self :: Layer)
     end
 end
 export initWeights!
+
+function getParameters(self :: Layer)
+    local params = Array((AbstractArray, AbstractArray), 0)
+    for layer in self
+        if :weight in names(layer) && :gradWeight in names(layer)
+            push!(params, (layer.weight, layer.gradWeight))
+        end
+        if :bias in names(layer) && :gradBias in names(layer)
+            push!(params, (layer.bias, layer.gradBias))
+        end
+    end
+    return params
+end
+export getParameters
             
 abstract Criterion{A<:AbstractArray, B<:AbstractArray}
 
