@@ -17,6 +17,20 @@ using MNIST
 target = zeros(Float64, 10, 1)
 criterion = MSECriterion(Float64, 1, 10)
 
+sgd_state = ObjectIdDict()
+function sgd(x, dfdx)
+    local lr = 0.1
+    local mom = 0.9
+    local cur_dfdx
+    if haskey(sgd_state, x)
+        cur_dfdx = sgd_state[x]
+    else
+        cur_dfdx = zeros(x)
+    end
+    cur_dfdx[:] = mom * cur_dfdx + (1.0 - mom) * dfdx
+    x[:] = x - lr * cur_dfdx
+end
+
 for iter = 1:num_iters
     local loss
     loss = 0.0
@@ -26,12 +40,18 @@ for iter = 1:num_iters
         target[label,1] = 1.0
 
         local out = forward!(net, image_data)
-        loss += forward!(criterion, out, target)[1]
+        local l = forward!(criterion, out, target)[1]
+        loss += l
         local gi = backward!(criterion, out, target)
         zeroGradParameters!(net)
         backward!(net, image_data, gi)
 
         target[label,1] = 0.0
+
+        for (x, dfdx) in getParameters(net)
+            sgd(x, dfdx)
+        end
+        println("  ", l)
     end
     loss /= num_images
     println(iter, " ", loss)
