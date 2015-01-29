@@ -10,9 +10,7 @@ function updateOutput!{A}(self :: ReLU{A}, input :: A)
     return self.output
 end
 
-function updateGradInput!{A}(self :: ReLU{A},
-                             input :: A,
-                             gradOutput :: A)
+function updateGradInput!{A}(self :: ReLU{A}, input :: A, gradOutput :: A)
     self.gradInput = gradOutput .* (input .>= zero(eltype(input)))
     return self.gradInput
 end

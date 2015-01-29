@@ -133,6 +133,16 @@ function initWeights!(self :: Layer)
 end
 export initWeights!
             
+abstract Criterion{A<:AbstractArray, B<:AbstractArray}
+
+function forward!{A,B}(c :: Criterion{A,B}, x :: A, t :: A)
+    return updateOutput!(c, x, t)
+end
+
+function backward!{A,B}(c :: Criterion{A,B}, x :: A, t :: A)
+    return updateGradInput!(c, x, t)
+end
+
 
 #######
 

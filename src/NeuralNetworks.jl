@@ -8,11 +8,15 @@ include("Linear.jl")
 
 # nonlinearities
 include("ReLU.jl")
+include("Sigmoid.jl")
 
 # containers
 include("Serial.jl")
 
 # miscellaneous
 include("View.jl")
+
+# criterions
+include("MSECriterion.jl")
 
 end
